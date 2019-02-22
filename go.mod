@@ -1,1 +1,1 @@
-module "github.com/blueimp/wildcard-redirect"
+module github.com/blueimp/wildcard-redirect
