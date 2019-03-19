@@ -61,7 +61,7 @@ Requests are logged in `JSON` format to `stdout`:
 ```json
 {
   "Time": "2018-07-17T10:19:26.055298263Z",
-  "RemoteIP": "[::1]",
+  "RemoteIP": "::1",
   "Method": "GET",
   "Host": "test.example.com",
   "RequestURI": "/",

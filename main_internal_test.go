@@ -336,7 +336,7 @@ func TestRedirectHandlerOutputWithIPv6(t *testing.T) {
 	})
 	var entry logEntry
 	json.Unmarshal(stdout, &entry)
-	if entry.RemoteIP != "[::1]" {
+	if entry.RemoteIP != "::1" {
 		t.Errorf(
 			"Unexpected 'IP' log: %s. Expected: %s",
 			entry.RemoteIP,

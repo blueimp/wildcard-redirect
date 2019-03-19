@@ -73,9 +73,6 @@ func redirectURL(req *http.Request, options *redirectOptions) *url.URL {
 
 func redirectHandler(resp http.ResponseWriter, req *http.Request) {
 	ip, _, _ := net.SplitHostPort(req.RemoteAddr)
-	if strings.IndexByte(ip, ':') >= 0 {
-		ip = "[" + ip + "]"
-	}
 	forwardedProto := req.Header.Get("X-Forwarded-Proto")
 	entry := &logEntry{
 		Time:           time.Now().UTC(),
