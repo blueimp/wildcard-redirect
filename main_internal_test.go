@@ -75,6 +75,23 @@ func TestRedirectURLWithoutScheme(t *testing.T) {
 	}
 }
 
+func TestRedirectURLWithForwardedHost(t *testing.T) {
+	req := httptest.NewRequest(
+		"GET",
+		"/path", // NewRequest function uses example.com as default host
+		nil,
+	)
+	req.Header.Set("X-Forwarded-Host", "test.example.com")
+	url := redirectURL(req, &redirectOptions{
+		TargetHost:     "example.org",
+		HostQueryParam: "via",
+	}).String()
+	expectedURL := "http://test.example.org/path?via=test.example.com"
+	if url != expectedURL {
+		t.Errorf("Unexpected redirect URL: %s. Expected: %s", url, expectedURL)
+	}
+}
+
 func TestRedirectURLWithQueryOption(t *testing.T) {
 	req := httptest.NewRequest(
 		"GET",
@@ -249,6 +266,7 @@ func TestRedirectHandlerOutput(t *testing.T) {
 	req.Header.Set("Referer", "http://example.com/")
 	req.Header.Set("User-Agent", "Examplebot/1.0 (+http://example.com)")
 	req.Header.Set("X-Forwarded-Proto", "https")
+	req.Header.Set("X-Forwarded-Host", "test.example.com")
 	req.Header.Set("X-Forwarded-For", "127.0.0.1")
 	timeBefore := time.Now()
 	stdout, stderr := outputHelper(func() {
@@ -311,9 +329,16 @@ func TestRedirectHandlerOutput(t *testing.T) {
 			"127.0.0.1",
 		)
 	}
+	if entry.ForwardedHost != "test.example.com" {
+		t.Errorf(
+			"Unexpected 'ForwardedHost' log: %s. Expected: %s",
+			entry.ForwardedHost,
+			"test.example.com",
+		)
+	}
 	if entry.ForwardedProto != "https" {
 		t.Errorf(
-			"Unexpected 'ForwardedFor' log: %s. Expected: %s",
+			"Unexpected 'ForwardedProto' log: %s. Expected: %s",
 			entry.ForwardedProto,
 			"https",
 		)

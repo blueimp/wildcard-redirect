@@ -28,6 +28,7 @@ type logEntry struct {
 	Referrer       string
 	UserAgent      string
 	ForwardedFor   string
+	ForwardedHost  string
 	ForwardedProto string
 }
 
@@ -54,19 +55,23 @@ func redirectURL(req *http.Request, options *redirectOptions) *url.URL {
 	} else {
 		targetURL.Scheme = "http"
 	}
-	if len(req.Host) != 0 && len(options.TargetHost) != 0 {
+	originalHost := req.Header.Get("X-Forwarded-Host")
+	if len(originalHost) == 0 {
+		originalHost = req.Host
+	}
+	if len(originalHost) != 0 && len(options.TargetHost) != 0 {
 		if options.HostQueryParam != "" {
 			query := targetURL.Query()
-			query.Set(options.HostQueryParam, req.Host)
+			query.Set(options.HostQueryParam, originalHost)
 			targetURL.RawQuery = query.Encode()
 		}
-		part := strings.Split(req.Host, ".")[0]
+		part := strings.Split(originalHost, ".")[0]
 		if strings.IndexByte(part, ':') >= 0 {
 			part, _, _ = net.SplitHostPort(part)
 		}
 		targetURL.Host = part + "." + options.TargetHost
 	} else {
-		targetURL.Host = req.Host
+		targetURL.Host = originalHost
 	}
 	return targetURL
 }
@@ -83,7 +88,8 @@ func redirectHandler(resp http.ResponseWriter, req *http.Request) {
 		Referrer:       req.Header.Get("Referer"),
 		UserAgent:      req.Header.Get("User-Agent"),
 		ForwardedFor:   req.Header.Get("X-Forwarded-For"),
-		ForwardedProto: forwardedProto,
+		ForwardedHost:  req.Header.Get("X-Forwarded-Host"),
+		ForwardedProto: req.Header.Get("X-Forwarded-Proto"),
 	}
 	defer entry.Log()
 	options := &redirectOptions{
